@@ -158,10 +158,14 @@ function shuffle(a,r){for(var i=a.length-1;i>0;i--){var j=Math.floor(r()*(i+1)),
 function dailySet(pool,n,seed){
   var rnd=mulberry32(seed===undefined?daySeed():seed);
   var by={};pool.forEach(function(q,k){(by[q.lv]=by[q.lv]||[]).push(k)});
+  var lvs=Object.keys(by),takes={},fr=[],sum=0;
+  lvs.forEach(function(lv){var ex=n*by[lv].length/pool.length,t=Math.floor(ex);takes[lv]=t;sum+=t;fr.push([lv,ex-t])});
+  fr.sort(function(a,b){return b[1]-a[1]});
+  var gi=0;
+  while(sum<n&&gi<1000){var lv2=fr[gi%fr.length][0];if(takes[lv2]<by[lv2].length){takes[lv2]++;sum++}gi++}
   var picks=[];
-  Object.keys(by).forEach(function(lv){
-    var arr=by[lv].slice(),take=Math.round(n*arr.length/pool.length);
-    shuffle(arr,rnd).slice(0,take).forEach(function(k){picks.push(k)});
+  lvs.forEach(function(lv){
+    shuffle(by[lv].slice(),rnd).slice(0,takes[lv]).forEach(function(k){picks.push(k)});
   });
   shuffle(picks,rnd);
   return picks.slice(0,Math.min(n,picks.length)).map(function(k){
